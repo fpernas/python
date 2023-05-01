@@ -8,6 +8,8 @@ from tabs.controls.ContainerRowControl import *
 
 isLoading = True
 
+dockerClient = docker.DockerClient(base_url='tcp://localhost:2375')
+
 def main(page: ft.Page):
     page.window_width = 1000        # window's width is 200 px
     page.window_height = 600       # window's height is 200 px
@@ -22,13 +24,12 @@ def main(page: ft.Page):
         )
         page.update()
 
-        client = docker.DockerClient(base_url='tcp://localhost:2375')
-        containers = client.containers.list(all=listAll)
+        containers = dockerClient.containers.list(all=listAll)
         # text.value = f"There are {len(containers)} containers"
         containerRows = []
         if (len(containers) > 0):
             for container in containers:
-                containerRows.append(ContainerRowControl(container))
+                containerRows.append(ContainerRowControl(container, page, dockerClient))
             
             containerList.content = ft.Column(
                 controls=containerRows
