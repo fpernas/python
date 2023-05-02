@@ -1,42 +1,88 @@
 import flet as ft
 
+# need to try-catch when executing container operations
+
 class ContainerRowControl(ft.UserControl):
 
-    def __init__(self, container, mainPage, dockerClient):
+    def __init__(self, container_id, dockerClient, page):
         super().__init__()
-        self.container = container  # this container is not updated every time, so it would be good to obtain it every time from the client
-        self.page = mainPage
         self.client = dockerClient
+        self.page = page
+        self.container_id = container_id  # this container is not updated every time, so it would be good to obtain it every time from the client
+        self.container = self.__get_container_from_client__()
         self.controlToDisplay = ft.Row(
             controls=self.__create_container_info_row_controls__()
         )
 
+    def __get_container_from_client__(self):
+        try:
+            return self.client.containers.get(self.container_id)
+        except:
+            return None
+
     def __get_container_status__(self):
-        if (self.container.status == 'exited'):
-            return ft.colors.RED
-        elif (self.container.status == 'running'):
-            return ft.colors.GREEN
+        container = self.__get_container_from_client__()
+        if (container != None):
+            if (container.status == 'exited'):
+                return ft.colors.RED
+            elif (container.status == 'running'):
+                return ft.colors.GREEN
         
     def __start_container__(self, args):
         self.controlToDisplay.controls = self.__create_loading_row__()
         self.update()
 
-        print('prior status: ', self.container.status)
         self.container.start()
         self.container = self.client.containers.get(self.container.id)
-        print('post status: ', self.container.status)
 
         self.controlToDisplay.controls = self.__create_container_info_row_controls__()
-        self.update()  # not working
+        self.update()
     
     def __init_console_on_container__(self, args):
         return
     
+    def __close_modal__(self, args):
+        self.modal.open = False
+        self.page.update()
+    
     def __stream_container_logs__(self, args):
-        return
+        logRows = ft.ListView(
+            controls=[],
+            auto_scroll=True,
+            width=700,
+            height=200,
+            spacing=-10,
+            padding=0
+        )
+
+        self.modal = ft.AlertDialog(
+            modal=True,
+            content=logRows,
+            actions=[ft.TextButton(text="Close", on_click=self.__close_modal__)],
+            on_dismiss=lambda e: print("como cierro el stream?")
+        )
+
+        self.page.dialog = self.modal
+        self.modal.open = True
+        self.page.update()
+
+        logRowsArray = []
+        for log in self.container.logs(stream=True):
+            logLine = log.decode('UTF-8')
+            if (len(logLine.strip()) > 0):
+                logRowsArray.append(ft.Text(logLine))
+                logRows.controls = logRowsArray
+                self.page.update()
 
     def __stop_container__(self, args):
+        self.controlToDisplay.controls = self.__create_loading_row__()
+        self.update()
+
         self.container.stop()
+        self.container = self.client.containers.get(self.container.id)
+
+        self.controlToDisplay.controls = self.__create_container_info_row_controls__()
+        self.update()
     
     def __delete_container__(self, args):
         return
@@ -57,18 +103,24 @@ class ContainerRowControl(ft.UserControl):
                 value=False
             ),
             ft.Container(
-                tooltip="Status",
-                width = 10,
-                height = 10,
-                bgcolor=self.__get_container_status__()
+                width=50,
+                content=ft.Container(
+                    tooltip="Status",
+                    width = 10,
+                    height = 10,
+                    bgcolor=self.__get_container_status__()
+                )
             ),
             ft.Container(
-                content=ft.Text(f"{self.container.short_id}")
+                content=ft.Text(f"{self.container.short_id}"),
+                width=150
             ),
             ft.Container(
-                content=ft.Text(f"{self.container.name}")
+                content=ft.Text(f"{self.container.name}"),
+                width=200
             ),
             ft.Container(
+                width = 300,
                 content=ft.Row(
                     controls=[
                         ft.IconButton(

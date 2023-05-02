@@ -16,7 +16,44 @@ def main(page: ft.Page):
     page.window_resizable = True  # window is not resizable
     page.update()
 
+    containers = []
+
+    def create_containers_table_headers():
+        return ft.Row(
+            controls=[
+                ft.Container(
+                    content=ft.Checkbox(
+                        tooltip="Select all"
+                    ),
+                ),
+                ft.Container( 
+                    content=ft.Text("Status"), 
+                    width=50
+                ),
+                ft.Container( 
+                    content=ft.Text("Short id"),
+                    width=150 
+                ),
+                ft.Container( 
+                    content=ft.Text("Name"),
+                    width=200 
+                ),
+                ft.Container( 
+                    content=ft.Text("Actions"),
+                    width=300 
+                )
+            ]
+        )
+
     def list_containers(listAll):
+
+        # modal = ft.AlertDialog(
+        #     modal=True,
+        #     content=ft.Text("something!")
+        # )
+
+        # page.dialog = modal
+        # modal.open = True
         # display loading control
         containerList.content = ft.Container(
             content=ft.ProgressRing(),
@@ -26,10 +63,10 @@ def main(page: ft.Page):
 
         containers = dockerClient.containers.list(all=listAll)
         # text.value = f"There are {len(containers)} containers"
-        containerRows = []
+        containerRows = [create_containers_table_headers()]
         if (len(containers) > 0):
             for container in containers:
-                containerRows.append(ContainerRowControl(container, page, dockerClient))
+                containerRows.append(ContainerRowControl(container.id, dockerClient, page))
             
             containerList.content = ft.Column(
                 controls=containerRows
@@ -53,7 +90,7 @@ def main(page: ft.Page):
             animation_duration=300,
             tabs=[
                 ft.Tab(
-                    text="Dashboard tab",
+                    text="Dashboard",
                     content=TextContainerControl("Dashboard tab")
                 ),
                 ft.Tab(
@@ -62,21 +99,32 @@ def main(page: ft.Page):
                         controls=[
                             ft.Row (
                                 controls=[
-                                    ft.ElevatedButton(
-                                        "Start all",
-                                        icon=ft.icons.PLAY_ARROW
+                                    ft.Container(
+                                        content=ft.TextButton(
+                                            icon=ft.icons.PLAY_ARROW,
+                                            text="Run all",
+                                            disabled=len(containers) == 0
+                                        )
                                     ),
-                                    ft.ElevatedButton(
-                                        "List all containers",
-                                        icon=ft.icons.LIST,
-                                        on_click=list_containers,
-                                        data=True
+                                    ft.Container(
+                                        content=ft.TextButton(
+                                            icon=ft.icons.REFRESH,
+                                            text="Reload containers",
+                                            on_click=list_containers,
+                                            data=False
+                                        )
                                     )
                                 ]
                             ),
                             containerList
                         ]
                     )
+                ),
+                ft.Tab(
+                    text="Images",
+                ),
+                ft.Tab(
+                    text="Network"
                 )
             ],
 
