@@ -1,14 +1,17 @@
 import flet as ft
+import docker
 
 # need to try-catch when executing container operations
 
 class ContainerRowControl(ft.UserControl):
 
+    # show logs in a hidden container, not in a modal
+    # in that way, page shouldn't be needed
     def __init__(self, container_id, dockerClient, page):
         super().__init__()
         self.client = dockerClient
         self.page = page
-        self.container_id = container_id  # this container is not updated every time, so it would be good to obtain it every time from the client
+        self.container_id = container_id
         self.container = self.__get_container_from_client__()
         self.controlToDisplay = ft.Row(
             controls=self.__create_container_info_row_controls__()
@@ -17,7 +20,8 @@ class ContainerRowControl(ft.UserControl):
     def __get_container_from_client__(self):
         try:
             return self.client.containers.get(self.container_id)
-        except:
+        except docker.errors.NotFound:
+            print(f"container with id {self.container_id} not found")
             return None
 
     def __get_container_status__(self):
@@ -27,16 +31,20 @@ class ContainerRowControl(ft.UserControl):
                 return ft.colors.RED
             elif (container.status == 'running'):
                 return ft.colors.GREEN
+        else:
+            return ft.colors.GREY
         
     def __start_container__(self, args):
         self.controlToDisplay.controls = self.__create_loading_row__()
         self.update()
 
-        self.container.start()
-        self.container = self.client.containers.get(self.container.id)
+        container = self.__get_container_from_client__()
+        if (container != None):
+            self.container.start()
+            self.container = self.client.containers.get(self.container.id)
 
-        self.controlToDisplay.controls = self.__create_container_info_row_controls__()
-        self.update()
+            self.controlToDisplay.controls = self.__create_container_info_row_controls__()
+            self.update()
     
     def __init_console_on_container__(self, args):
         return
