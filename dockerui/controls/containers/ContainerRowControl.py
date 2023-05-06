@@ -7,15 +7,14 @@ class ContainerRowControl(ft.UserControl):
 
     # show logs in a hidden container, not in a modal
     # in that way, page shouldn't be needed
-    def __init__(self, container_id, dockerClient, page):
+    def __init__(self, container_id, dockerClient, page, delete_op):
         super().__init__()
         self.client = dockerClient
         self.page = page
         self.container_id = container_id
+        self.delete_container_op = delete_op
         self.container = self.__get_container_from_client__()
-        self.controlToDisplay = ft.Row(
-            controls=self.__create_container_info_row_controls__()
-        )
+        self.controlToDisplay = ft.Row( controls=self.__create_container_info_row_controls__() )
 
     def __get_container_from_client__(self):
         try:
@@ -93,7 +92,18 @@ class ContainerRowControl(ft.UserControl):
         self.update()
     
     def __delete_container__(self, args):
-        return
+        try:
+            docker_container = self.client.containers.get(self.container_id)
+            if (docker_container.status != 'running'):
+                docker_container.remove()
+                self.delete_container_op(self)
+            else:
+                print("container is running")
+        except docker.errors.NotFound:
+            print("container not found")
+        except docker.errors.APIError:
+            print("there was a problem")
+        
     
     def __create_loading_row__(self):
         return [

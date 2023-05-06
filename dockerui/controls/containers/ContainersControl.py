@@ -11,7 +11,8 @@ class ContainersControl(ft.UserControl):
         self.__create_controls_references__()
 
     def __create_controls_references__(self):
-        self.containerList = ft.Container()
+        self.containersWrapper = ft.Container()
+        self.containersList = ft.Column()
         self.buttonStartAll = ft.Container()
         self.buttonReload = ft.Container()
 
@@ -45,7 +46,7 @@ class ContainersControl(ft.UserControl):
 
     def list_containers(self, listAll):
         # if assigning the var doesn't work, assign the content of the variable
-        self.containerList.content = ft.Container(
+        self.containersWrapper.content = ft.Container(
             content=ft.ProgressRing(),
             padding=10
         )
@@ -57,22 +58,21 @@ class ContainersControl(ft.UserControl):
         if (len(containers) > 0):
             self.containers = [self.__create_table_headers__()]
             for container in containers:
-                self.containers.append(ContainerRowControl(container.id, self.dockerClient, None))
+                self.containers.append(ContainerRowControl(container.id, self.dockerClient, None, self.__delete_container__))
             
-            self.containerList.content = ft.Column(
-                controls=self.containers
-            )
+            self.containersList.controls = self.containers
+            self.containersWrapper.content = self.containersList
 
             self.buttonStartAll.content.disabled = False
             
         else:
-            self.containerList.content = ft.Text("There are no containers")
+            self.containersWrapper.content = ft.Text("There are no containers")
         
         self.update()
 
 
     def start_all_containers(self, startAll):
-        self.containerList.content = ft.Container(
+        self.containersWrapper.content = ft.Container(
             content=ft.ProgressRing(),
             padding=10
         )
@@ -83,10 +83,16 @@ class ContainersControl(ft.UserControl):
             for container in containers:
                 container.start()
         
-        self.containerList.content = ft.Container()
+        self.containersWrapper.content = ft.Container()
         self.update()
 
         self.list_containers(startAll)
+
+    def __delete_container__(self, container):
+        self.containersList.controls.remove(container)
+        self.update()
+
+        
 
     def build(self):
         return ft.Column(
@@ -97,6 +103,6 @@ class ContainersControl(ft.UserControl):
                         self.__create_reload_button__()
                     ]
                 ),
-                self.containerList
+                self.containersWrapper
             ]
         )
