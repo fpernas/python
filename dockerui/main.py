@@ -1,12 +1,13 @@
 import flet as ft
 import docker
 
-from tabs.dashboard import *
-from tabs.textControl import *
-from controls.containers.ContainersControl import *
-
 from controls.TextContainerControl import *
+from controls.MainDashboardControl import *
+from controls.ImagesControl import *
+from controls.NetworksControl import *
+
 from controls.containers.ContainerRowControl import *
+from controls.containers.ContainersControl import *
 
 isLoading = True
 
@@ -34,7 +35,7 @@ def main(page: ft.Page):
             tabs=[
                 ft.Tab(
                     text="Dashboard",
-                    content=TextContainerControl("Dashboard tab")
+                    content=MainDashboardControl()
                 ),
                 ft.Tab(
                     text="Containers",
@@ -42,9 +43,11 @@ def main(page: ft.Page):
                 ),
                 ft.Tab(
                     text="Images",
+                    content=ImagesControl()
                 ),
                 ft.Tab(
-                    text="Network"
+                    text="Network",
+                    content=NetworksControl()
                 )
             ],
 
