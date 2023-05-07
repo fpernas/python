@@ -21,6 +21,7 @@ class ContainersControl(ft.UserControl):
         self.button_load_containers = ft.Container()
         self.button_start_selected = ft.Container()
         self.button_delete_selected = ft.Container()
+        self.button_create_container = ft.Container()
 
     def __create_table_headers__(self):
         headers = [{'title': "Status", 'width': 50}]
@@ -59,6 +60,16 @@ class ContainersControl(ft.UserControl):
         )
 
         return self.button_delete_selected
+    
+    def __create_add_container_button__(self):
+        self.button_create_container.content = ft.TextButton(
+            icon=ft.icons.ADD,
+            text="Add new container",
+            tooltip="Not implemented yet",
+            on_click=self.__create_new_container__
+        )
+
+        return self.button_create_container
 
     def __list_containers__(self, listAll):
         self.containersWrapper.content = LoadingRingControl(10)
@@ -116,6 +127,9 @@ class ContainersControl(ft.UserControl):
 
         self.__list_containers__(True)
 
+    def __create_new_container__(self, args):
+        print("Not implemented yet")
+
     def __delete_container__(self, container):
         self.containersList.controls.remove(container)
         self.update()
@@ -132,14 +146,14 @@ class ContainersControl(ft.UserControl):
         self.update()
 
     def build(self):
-        return ft.Column(
+        return ft.ListView(
             controls=[
                 ft.Row (
                     controls=[
                         self.__create_load_button__(),
                         self.__create_start_selected_button__(),
-                        self.__create_delete_selected_button__()
-                        
+                        self.__create_delete_selected_button__(),
+                        self.__create_add_container_button__()
                     ]
                 ),
                 self.containersWrapper
