@@ -3,13 +3,12 @@ import docker
 
 from controls.TextContainerControl import *
 from controls.MainDashboardControl import *
-from controls.ImagesControl import *
 from controls.NetworksControl import *
+
+from controls.images.ImagesControl import *
 
 from controls.containers.ContainerRowControl import *
 from controls.containers.ContainersControl import *
-
-isLoading = True
 
 dockerClient = docker.DockerClient(base_url='tcp://localhost:2375')
 
@@ -30,7 +29,7 @@ def main(page: ft.Page):
     )
 
     center = ft.Tabs (
-            selected_index=1,
+            selected_index=2,
             animation_duration=300,
             tabs=[
                 ft.Tab(
@@ -43,7 +42,7 @@ def main(page: ft.Page):
                 ),
                 ft.Tab(
                     text="Images",
-                    content=ImagesControl()
+                    content=ImagesControl(dockerClient)
                 ),
                 ft.Tab(
                     text="Network",
